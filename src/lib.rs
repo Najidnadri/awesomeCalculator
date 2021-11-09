@@ -1,41 +1,60 @@
 
 
-use std::vec;
+use std::{default, vec};
 
-use egui::{Vec2, vec2};
+use egui::{Sense, Vec2, vec2};
 use eframe::epi::App;
 
+
+pub enum Action {
+    Plus,
+    Minus,
+    Divide,
+    Multiply,
+    None,
+}
+
+impl Default for Action {
+    fn default() -> Self {
+        Action::Plus
+    }
+}
 
 #[derive(Default)]
 pub struct Event {
     input: String,
     total: String,
     positive: bool,
+    action: Action
 }
 
 impl Event {
     pub fn new() -> Self {
         Event {
             input: Default::default(),
-            total: "0".to_string(),
-            positive: true
+            total: Default::default(),
+            positive: true,
+            action: Action::None
         }
     }
 
     pub fn reset(&mut self) {
         self.input = Default::default();
-        self.total = "0".to_string();
-        self.positive = true
+        self.total = Default::default();
+        self.positive = true;
+        self.action = Action::None;
     }
 
-    pub fn calc(&mut self, s: &str) {
-        match s {
-            "+" => self.plus(),
-            "-" => self.minus(),
-            "X" => self.prod(),
-            _ => self.divide(),
+    pub fn calc(&mut self, s: Action) {
+        match self.action {
+            Action::Plus => self.plus(),
+            Action::Minus => self.minus(),
+            Action::Multiply => self.prod(),
+            Action::Divide => self.divide(),
+            Action::None => {self.total = self.input.clone()},
         };
         self.input = Default::default();
+        self.action = s;
     }
 
     fn plus(&mut self) {
@@ -56,6 +75,19 @@ impl Event {
     fn divide(&mut self) {
         let r = self.total.parse::<f64>().expect("cant convert to number") / self.input.parse::<f64>().expect("cant convert to number");
         self.total = r.to_string();
+    }
+
+    fn equal(&mut self) {
+        match self.action {
+            Action::Plus => self.plus(),
+            Action::Minus => self.minus(),
+            Action::Multiply => self.prod(),
+            Action::Divide => self.divide(),
+            Action::None => {self.total = self.input.clone()},
+        };
+        self.input = self.total.clone();
+        self.total = Default::default();
+        self.action = Action::None;
     }
 }
 
@@ -103,17 +135,18 @@ impl App for Event {
                     let minus = ui.add_sized(vec2(50.0,50.0), egui::Button::new("-"));
                     let multiply = ui.add_sized(vec2(50.0,50.0), egui::Button::new("X"));
                     let divide = ui.add_sized(vec2(50.0,50.0), egui::Button::new("/"));
-                    if plus.clicked() {self.calc("+")};
-                    if minus.clicked() {self.calc("-")};
-                    if multiply.clicked() {self.calc("X")};
-                    if divide.clicked() {self.calc("/")};
+                    if plus.clicked() {self.calc(Action::Plus)};
+                    if minus.clicked() {self.calc(Action::Minus)};
+                    if multiply.clicked() {self.calc(Action::Multiply)};
+                    if divide.clicked() {self.calc(Action::Divide)};
                 });
             });
             ui.allocate_ui(vec2(ui.available_width(), 50.0), |ui| {
                 ui.columns(2, |ui| {
                     let clear = ui[0].add_sized(vec2(100.0, 50.0), egui::Button::new("C"));
                     let equal = ui[1].add_sized(vec2(100.0, 50.0), egui::Button::new("="));
-                    if clear.clicked() {self.reset();}
+                    if clear.clicked() {self.reset();};
+                    if equal.clicked() {self.equal();};
                 })
             });
         });
