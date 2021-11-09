@@ -21,6 +21,7 @@ pub struct Event {
     input: String,
     total: String,
     action: Action,
+    err: bool
 }
 
 impl Event {
@@ -29,6 +30,7 @@ impl Event {
             input: Default::default(),
             total: Default::default(),
             action: Action::None,
+            err: false,
         }
     }
 
@@ -36,19 +38,23 @@ impl Event {
         self.input = Default::default();
         self.total = Default::default();
         self.action = Action::None;
+        self.err = false;
     }
 
     pub fn calc(&mut self, s: Action) {
-
-        match self.action {
-            Action::Plus => self.plus(),
-            Action::Minus => self.minus(),
-            Action::Multiply => self.prod(),
-            Action::Divide => self.divide(),
-            Action::None => {self.total = self.input.clone()},
-        };
-        self.input = Default::default();
-        self.action = s;
+        if self.input.is_empty() {
+            self.err = true;
+        } else {
+            match self.action {
+                Action::Plus => self.plus(),
+                Action::Minus => self.minus(),
+                Action::Multiply => self.prod(),
+                Action::Divide => self.divide(),
+                Action::None => {self.total = self.input.clone()},
+            };
+            self.input = Default::default();
+            self.action = s;
+        }
     }
 
     fn plus(&mut self) {
@@ -97,6 +103,9 @@ impl App for Event {
     fn update(&mut self, ctx: &egui::CtxRef, _frame: &mut eframe::epi::Frame<'_>) {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.allocate_ui(vec2(ui.available_width(), 50.0), |ui| {
+                if self.err {
+                    ui.add_sized(ui.available_size(), egui::Label::new("PLEASE INPUT A NUMBER!"));
+                }
                 let _screen = ui.add_sized(ui.available_size(), egui::TextEdit::singleline(&mut self.input));
                 ui.label(format!("Total = {}", &self.total));
             });
@@ -107,9 +116,9 @@ impl App for Event {
                     let four = ui.add_sized(vec2(50.0,50.0), egui::Button::new("4"));
                     let one = ui.add_sized(vec2(50.0,50.0), egui::Button::new("1"));
                     let sign = ui.add_sized(vec2(50.0,50.0), egui::Button::new("+/-"));
-                    if seven.clicked() {self.input.push('7')};
-                    if four.clicked() {self.input.push('4')};
-                    if one.clicked() {self.input.push('1')};
+                    if seven.clicked() {self.input.push('7'); self.err = false;};
+                    if four.clicked() {self.input.push('4'); self.err = false;};
+                    if one.clicked() {self.input.push('1'); self.err = false;};
                     if sign.clicked() {self.pos_nev()};
                 });
                 ui[1].vertical_centered_justified(|ui| {
@@ -117,20 +126,20 @@ impl App for Event {
                     let five = ui.add_sized(vec2(50.0,50.0), egui::Button::new("5"));
                     let two = ui.add_sized(vec2(50.0,50.0), egui::Button::new("2"));
                     let zero = ui.add_sized(vec2(50.0,50.0), egui::Button::new("0"));
-                    if eight.clicked() {self.input.push('8')};
-                    if five.clicked() {self.input.push('5')};
-                    if two.clicked() {self.input.push('2')};
-                    if zero.clicked() {self.input.push('0')};
+                    if eight.clicked() {self.input.push('8'); self.err = false;};
+                    if five.clicked() {self.input.push('5'); self.err = false;};
+                    if two.clicked() {self.input.push('2'); self.err = false;};
+                    if zero.clicked() {self.input.push('0'); self.err = false;};
                 });
                 ui[2].vertical_centered_justified(|ui| {
                     let nine = ui.add_sized(vec2(50.0,50.0), egui::Button::new("9"));
                     let six = ui.add_sized(vec2(50.0,50.0), egui::Button::new("6"));
                     let three = ui.add_sized(vec2(50.0,50.0), egui::Button::new("3"));
                     let point = ui.add_sized(vec2(50.0,50.0), egui::Button::new("."));
-                    if nine.clicked() {self.input.push('9')};
-                    if six.clicked() {self.input.push('6')};
-                    if three.clicked() {self.input.push('3')};
-                    if point.clicked() {if !self.input.contains('.') {self.input.push('.')}};
+                    if nine.clicked() {self.input.push('9'); self.err = false;};
+                    if six.clicked() {self.input.push('6'); self.err = false;};
+                    if three.clicked() {self.input.push('3'); self.err = false;};
+                    if point.clicked() {if !self.input.contains('.') {self.input.push('.'); self.err = false;}};
                 });
                 ui[3].vertical_centered_justified(|ui| {
                     let plus = ui.add_sized(vec2(50.0,50.0), egui::Button::new("+"));
