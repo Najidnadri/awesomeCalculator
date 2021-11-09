@@ -1,10 +1,6 @@
 
-
-use std::{default, vec};
-
-use egui::{Sense, Vec2, vec2};
+use egui::vec2;
 use eframe::epi::App;
-
 
 pub enum Action {
     Plus,
@@ -24,8 +20,7 @@ impl Default for Action {
 pub struct Event {
     input: String,
     total: String,
-    positive: bool,
-    action: Action
+    action: Action,
 }
 
 impl Event {
@@ -33,19 +28,18 @@ impl Event {
         Event {
             input: Default::default(),
             total: Default::default(),
-            positive: true,
-            action: Action::None
+            action: Action::None,
         }
     }
 
     pub fn reset(&mut self) {
         self.input = Default::default();
         self.total = Default::default();
-        self.positive = true;
         self.action = Action::None;
     }
 
     pub fn calc(&mut self, s: Action) {
+
         match self.action {
             Action::Plus => self.plus(),
             Action::Minus => self.minus(),
@@ -89,10 +83,18 @@ impl Event {
         self.total = Default::default();
         self.action = Action::None;
     }
+
+    fn pos_nev(&mut self) {
+        if !self.input.contains('-') {
+            self.input.insert(0, '-');
+        } else {
+            self.input.remove(0);
+        }
+    }
 }
 
 impl App for Event {
-    fn update(&mut self, ctx: &egui::CtxRef, frame: &mut eframe::epi::Frame<'_>) {
+    fn update(&mut self, ctx: &egui::CtxRef, _frame: &mut eframe::epi::Frame<'_>) {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.allocate_ui(vec2(ui.available_width(), 50.0), |ui| {
                 let _screen = ui.add_sized(ui.available_size(), egui::TextEdit::singleline(&mut self.input));
@@ -108,7 +110,7 @@ impl App for Event {
                     if seven.clicked() {self.input.push('7')};
                     if four.clicked() {self.input.push('4')};
                     if one.clicked() {self.input.push('1')};
-                    if sign.clicked() {if self.positive {self.positive = false} else {self.positive = true}};
+                    if sign.clicked() {self.pos_nev()};
                 });
                 ui[1].vertical_centered_justified(|ui| {
                     let eight = ui.add_sized(vec2(50.0,50.0), egui::Button::new("8"));
@@ -135,10 +137,10 @@ impl App for Event {
                     let minus = ui.add_sized(vec2(50.0,50.0), egui::Button::new("-"));
                     let multiply = ui.add_sized(vec2(50.0,50.0), egui::Button::new("X"));
                     let divide = ui.add_sized(vec2(50.0,50.0), egui::Button::new("/"));
-                    if plus.clicked() {self.calc(Action::Plus)};
-                    if minus.clicked() {self.calc(Action::Minus)};
-                    if multiply.clicked() {self.calc(Action::Multiply)};
-                    if divide.clicked() {self.calc(Action::Divide)};
+                    if plus.clicked() {self.calc(Action::Plus);};
+                    if minus.clicked() {self.calc(Action::Minus);};
+                    if multiply.clicked() {self.calc(Action::Multiply);};
+                    if divide.clicked() {self.calc(Action::Divide);};
                 });
             });
             ui.allocate_ui(vec2(ui.available_width(), 50.0), |ui| {
